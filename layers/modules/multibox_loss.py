@@ -58,16 +58,24 @@ class MultiBoxLoss(nn.Module):
         loc_data, conf_data, priors = predictions
         num = loc_data.size(0)
         priors = priors[:loc_data.size(1), :]
+        #print('prior shape = ', priors.size())
         num_priors = (priors.size(0))
         num_classes = self.num_classes
 
         # match priors (default boxes) and ground truth boxes
         loc_t = torch.Tensor(num, num_priors, 4)
         conf_t = torch.LongTensor(num, num_priors)
+
+
+
         for idx in range(num):
+
             truths = targets[idx][:, :-1].data
+            #print(truths)
             labels = targets[idx][:, -1].data
+            #print(labels)
             defaults = priors.data
+            #print(defaults.size())
             match(self.threshold, truths, defaults, self.variance, labels,
                   loc_t, conf_t, idx)
         if self.use_gpu:
@@ -82,8 +90,13 @@ class MultiBoxLoss(nn.Module):
 
         # Localization Loss (Smooth L1)
         # Shape: [batch,num_priors,4]
+        #print(pos.dim())
+        #print(pos.unsqueeze(pos.dim()).size())
+        #print(pos.unsqueeze(pos.dim()).expand_as(loc_data).size())
         pos_idx = pos.unsqueeze(pos.dim()).expand_as(loc_data)
+        #print(pos_idx)
         loc_p = loc_data[pos_idx].view(-1, 4)
+        #print(loc_data[pos_idx])
         loc_t = loc_t[pos_idx].view(-1, 4)
         loss_l = F.smooth_l1_loss(loc_p, loc_t, size_average=False)
 

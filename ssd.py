@@ -31,6 +31,7 @@ class SSD(nn.Module):
         # TODO: implement __call__ in PriorBox
         self.priorbox = PriorBox(v2)
         self.priors = Variable(self.priorbox.forward(), volatile=True)
+        #print(self.priors.size())
         self.size = 300
 
         # SSD network
@@ -65,6 +66,7 @@ class SSD(nn.Module):
                     2: localization layers, Shape: [batch,num_priors*4]
                     3: priorbox layers, Shape: [2,num_priors*4]
         """
+        #print('x shape = ', x.size())
         sources = list()
         loc = list()
         conf = list()
@@ -72,13 +74,17 @@ class SSD(nn.Module):
         # apply vgg up to conv4_3 relu
         for k in range(23):
             x = self.vgg[k](x)
+            #print('k = ', k,' vgg[0:23] x shape = ', x.size())
 
         s = self.L2Norm(x)
+        #print('L2Norm s shape = ', s.size())
         sources.append(s)
 
         # apply vgg up to fc7
         for k in range(23, len(self.vgg)):
             x = self.vgg[k](x)
+            #print('k = ', k, ' vgg[23:end] x shape = ', x.size())
+
         sources.append(x)
 
         # apply extra layers and cache source layer outputs
@@ -86,14 +92,39 @@ class SSD(nn.Module):
             x = F.relu(v(x), inplace=True)
             if k % 2 == 1:
                 sources.append(x)
+                #print('k = ', k, ' x shape = ', x.size())
 
         # apply multibox head to source layers
+        #print('loc shape = ', self.loc)
+        #print('conf shape = ', self.conf)
         for (x, l, c) in zip(sources, self.loc, self.conf):
+            """
+            print('loc process')
+            lx = l(x)
+            print('source x shape = ', x.size(), '-->', l, '-->', lx.size())
+            lx = lx.permute(0, 2, 3, 1)
+            print('lx permute = ', lx.size())
+            lx = lx.contiguous()
+            print('lx contiguous = ', lx.size())
+            print('---------')
+
+            print('conf process')
+            cx = c(x)
+            print('source x shape = ', x.size(), '-->', c, '-->', cx.size())
+            cx = cx.permute(0, 2, 3, 1)
+            print('cx permute = ', cx.size())
+            cx = cx.contiguous()
+            print('cx contiguous = ', cx.size())
+            print('=========')
+            """
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
             conf.append(c(x).permute(0, 2, 3, 1).contiguous())
 
         loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
         conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
+
+
+
         if self.phase == "test":
             output = self.detect(
                 loc.view(loc.size(0), -1, 4),                   # loc preds

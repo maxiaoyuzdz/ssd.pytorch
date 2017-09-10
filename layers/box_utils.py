@@ -39,9 +39,14 @@ def intersect(box_a, box_b):
     B = box_b.size(0)
     max_xy = torch.min(box_a[:, 2:].unsqueeze(1).expand(A, B, 2),
                        box_b[:, 2:].unsqueeze(0).expand(A, B, 2))
+    #print(max_xy.size())
     min_xy = torch.max(box_a[:, :2].unsqueeze(1).expand(A, B, 2),
                        box_b[:, :2].unsqueeze(0).expand(A, B, 2))
+    #print(min_xy.size())
     inter = torch.clamp((max_xy - min_xy), min=0)
+    #print(inter.size())
+    #res = inter[:, :, 0] * inter[:, :, 1]
+    #print(res.size())
     return inter[:, :, 0] * inter[:, :, 1]
 
 
@@ -63,6 +68,12 @@ def jaccard(box_a, box_b):
     area_b = ((box_b[:, 2]-box_b[:, 0]) *
               (box_b[:, 3]-box_b[:, 1])).unsqueeze(0).expand_as(inter)  # [A,B]
     union = area_a + area_b - inter
+
+    #a1 = ((box_a[:, 2]-box_a[:, 0]) * (box_a[:, 3]-box_a[:, 1])).unsqueeze(1).expand_as(inter)
+    #print(a1.size())
+
+    #print((inter / union).size())
+
     return inter / union  # [A,B]
 
 
@@ -104,6 +115,8 @@ def match(threshold, truths, priors, variances, labels, loc_t, conf_t, idx):
         best_truth_idx[best_prior_idx[j]] = j
     matches = truths[best_truth_idx]          # Shape: [num_priors,4]
     conf = labels[best_truth_idx] + 1         # Shape: [num_priors]
+    #kk = best_truth_overlap < threshold
+    #print(kk.size())
     conf[best_truth_overlap < threshold] = 0  # label as background
     loc = encode(matches, priors, variances)
     loc_t[idx] = loc    # [num_priors,4] encoded offsets to learn
