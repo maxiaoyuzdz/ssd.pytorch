@@ -63,6 +63,9 @@ def jaccard(box_a, box_b):
         jaccard overlap: (tensor) Shape: [box_a.size(0), box_b.size(0)]
     """
     inter = intersect(box_a, box_b)
+    #a1 = (box_a[:, 2]-box_a[:, 0]) * (box_a[:, 3]-box_a[:, 1])
+    #a2 = a1.unsqueeze(1)
+    #a3 = a2.expand_as(inter)
     area_a = ((box_a[:, 2]-box_a[:, 0]) *
               (box_a[:, 3]-box_a[:, 1])).unsqueeze(1).expand_as(inter)  # [A,B]
     area_b = ((box_b[:, 2]-box_b[:, 0]) *
@@ -109,10 +112,17 @@ def match(threshold, truths, priors, variances, labels, loc_t, conf_t, idx):
     best_prior_idx.squeeze_(1)
     best_prior_overlap.squeeze_(1)
     best_truth_overlap.index_fill_(0, best_prior_idx, 2)  # ensure best prior
+    """
+    for k, v in enumerate(best_truth_overlap):
+        if v > 1.9:
+            print(k, v)
+    """
     # TODO refactor: index  best_prior_idx with long tensor
     # ensure every gt matches with its prior of max overlap
     for j in range(best_prior_idx.size(0)):
+        #print('old ', j, best_prior_idx[j], best_truth_idx[best_prior_idx[j]])
         best_truth_idx[best_prior_idx[j]] = j
+        #print('new ', j, best_prior_idx[j], best_truth_idx[best_prior_idx[j]])
     matches = truths[best_truth_idx]          # Shape: [num_priors,4]
     conf = labels[best_truth_idx] + 1         # Shape: [num_priors]
     #kk = best_truth_overlap < threshold
