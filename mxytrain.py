@@ -69,10 +69,10 @@ if args.visdom:
 ssd_net = build_ssd('train', 300, num_classes)
 net = ssd_net
 
-""""""
+"""
 if args.cuda:
     net = torch.nn.DataParallel(ssd_net)
-
+"""
     #cudnn.benchmark = True
 
 if args.resume:
@@ -186,6 +186,7 @@ def train():
         optimizer.zero_grad()
         loss_l, loss_c = criterion(out, targets)
         loss = loss_l + loss_c
+
         loss.backward()
         optimizer.step()
         t1 = time.time()
