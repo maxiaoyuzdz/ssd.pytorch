@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector Trai
 parser.add_argument('--version', default='v1', help='still be in edit')
 parser.add_argument('--basenet', default='/media/maxiaoyu/data/pretrainedmodel/vgg16_reducedfc.pth', help='pretrained base model')
 parser.add_argument('--jaccard_threshold', default=0.5, type=float, help='Min Jaccard index for matching')
-parser.add_argument('--batch_size', default=2, type=int, help='Batch size for training')
+parser.add_argument('--batch_size', default=64, type=int, help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str, help='Resume from checkpoint')
 parser.add_argument('--num_workers', default=1, type=int, help='Number of workers used in dataloading')
 parser.add_argument('--iterations', default=120000, type=int, help='Number of training iterations')
@@ -98,8 +98,9 @@ def runTraining():
     print('====== net =====')
     print(vgg_net)
     print('================')
-    """
+    """"""
     net = vgg_net
+    net = torch.nn.DataParallel(vgg_net)
     net = net.cuda()
 
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
@@ -111,7 +112,7 @@ def runTraining():
 
     epoch = 0
     print('Loading Dataset...')
-    """
+
 
 
 
@@ -125,7 +126,7 @@ def runTraining():
 
     #batch_iterator = None
     data_loader = data.DataLoader(dataset, batch_size, num_workers=args.num_workers,
-                                  shuffle=False, collate_fn=vgg_detection_collate, pin_memory=True)
+                                  shuffle=True, collate_fn=vgg_detection_collate, pin_memory=True)
     batch_count = 0
     # epoch iteration
     for iteration in range(args.start_iter, max_iter):
@@ -134,8 +135,8 @@ def runTraining():
             #batch_iterator = iter(data_loader)
         if iteration in stepvalues:
             step_index += 1
-            #adjust_learning_rate(optimizer, args.gamma, step_index)
-            #epoch += 1
+            adjust_learning_rate(optimizer, args.gamma, step_index)
+            epoch += 1
 
         # load train data
         #images, targets = next(batch_iterator)
@@ -143,16 +144,13 @@ def runTraining():
         for i, (images, targets) in enumerate(data_loader):
             batch_count += 1
 
-            #print(images.size())
-            #images =
-            print(targets)
-            print('----')
+
             # process image data
 
 
-            """
+            """"""
             images = Variable(images.cuda())
-            targets = [Variable(anno.cuda(), volatile=True) for anno in targets]
+            targets = Variable(targets.cuda())
             
             t0 = time.time()
             out = net(images)
@@ -168,7 +166,7 @@ def runTraining():
             if batch_count % 10 == 0:
                 print('Timer: %.4f sec.' % (t1 - t0))
                 print('iter ' + repr(batch_count) + ' || Loss: %.4f ||' % (loss.data[0]), end=' ')
-            """
+
 
 
 

@@ -299,7 +299,7 @@ class VGGDetection(data.Dataset):
         use_item_idx = randint(0, int(num_of_items-1))
         #print('use_item_idx = ', use_item_idx)
         item = target[use_item_idx]
-        pos = item[:4]
+
         label = item[4]
         #print(pos)
         #print(label)
@@ -334,7 +334,7 @@ class VGGDetection(data.Dataset):
         image = cv2.resize(t_img, (224, 224))
         img = image[:, :, (2, 1, 0)]
 
-        return torch.from_numpy(img).permute(2, 0, 1), label
+        return torch.from_numpy(img).permute(2, 0, 1).type(torch.FloatTensor), label
         #return t_img, label
 
 
