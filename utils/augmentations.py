@@ -415,3 +415,71 @@ class SSDAugmentation(object):
 
     def __call__(self, img, boxes, labels):
         return self.augment(img, boxes, labels)
+
+class Expand2(object):
+    def __init__(self, mean):
+        self.mean = mean
+
+    def __call__(self, image, boxes, labels):
+        if random.randint(2):
+            return image, boxes, labels
+
+        height, width, depth = image.shape
+        ratio = random.uniform(1, 4)
+        left = random.uniform(0, width*ratio - width)
+        top = random.uniform(0, height*ratio - height)
+
+        expand_image = np.zeros(
+            (int(height*ratio), int(width*ratio), depth),
+            dtype=image.dtype)
+        expand_image[:, :, :] = self.mean
+        expand_image[int(top):int(top + height),
+                     int(left):int(left + width)] = image
+        image = expand_image
+
+
+        return image, boxes, labels
+
+
+class RandomMirror2(object):
+    def __call__(self, image, boxes, classes):
+        _, width, _ = image.shape
+        if random.randint(2):
+            image = image[:, ::-1]
+
+        return image, boxes, classes
+
+class Compose2(object):
+    """Composes several augmentations together.
+    Args:
+        transforms (List[Transform]): list of transforms to compose.
+    Example:
+        >>> augmentations.Compose([
+        >>>     transforms.CenterCrop(10),
+        >>>     transforms.ToTensor(),
+        >>> ])
+    """
+
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, img, boxes=None, labels=None):
+        for t in self.transforms:
+            img, boxes, labels = t(img, boxes, labels)
+        return img
+
+class VGGAugmentation(object):
+    def __init__(self, size=224, mean=(104, 117, 123)):
+        self.mean = mean
+        self.size = size
+        self.augment = Compose2([
+            ConvertFromInts(),
+            PhotometricDistort(),
+            Expand2(self.mean),
+            RandomMirror2(),
+            Resize(self.size),
+            SubtractMeans(self.mean)
+        ])
+
+    def __call__(self, img, boxes=None, labels=None):
+        return self.augment(img, boxes, boxes)

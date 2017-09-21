@@ -329,9 +329,12 @@ class VGGDetection(data.Dataset):
         # h w c
         t_img = t_img.transpose(2, 0, 1)
         """
+        if self.transform is not None:
+            image = self.transform(img)
+            #s_img = Image.fromarray(image, 'RGB')
+            #s_img.show()
 
-
-        image = cv2.resize(t_img, (224, 224))
+        #image = cv2.resize(t_img, (224, 224))
         img = image[:, :, (2, 1, 0)]
 
         return torch.from_numpy(img).permute(2, 0, 1).type(torch.FloatTensor), label
