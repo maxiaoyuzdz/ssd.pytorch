@@ -483,3 +483,15 @@ class VGGAugmentation(object):
 
     def __call__(self, img, boxes=None, labels=None):
         return self.augment(img, boxes, boxes)
+
+class VGGValAugmentation(object):
+    def __init__(self, size=224, mean=(104, 117, 123)):
+        self.mean = mean
+        self.size = size
+        self.augment = Compose2([
+            Resize(self.size),
+            SubtractMeans(self.mean)
+        ])
+
+    def __call__(self, img, boxes=None, labels=None):
+        return self.augment(img, boxes, boxes)

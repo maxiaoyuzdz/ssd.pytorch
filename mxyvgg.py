@@ -8,7 +8,7 @@ import argparse
 from torch.autograd import Variable
 import torch.utils.data as data
 from data import v2, v1, AnnotationTransform, VGGDetection, detection_collate, VOCroot, VOC_CLASSES, vgg_detection_collate
-from utils.augmentations import SSDAugmentation, VGGAugmentation
+from utils.augmentations import SSDAugmentation, VGGAugmentation, VGGValAugmentation
 from layers.modules import MultiBoxLoss
 from ssd import build_ssd
 import numpy as np
@@ -188,7 +188,7 @@ def runTraining():
     train_data_loader = data.DataLoader(train_dataset, batch_size, num_workers=args.num_workers,
                                   shuffle=True, collate_fn=vgg_detection_collate, pin_memory=True)
 
-    val_dataset = VGGDetection(args.voc_root, val_sets, VGGAugmentation(
+    val_dataset = VGGDetection(args.voc_root, val_sets, VGGValAugmentation(
         ssd_dim, means), AnnotationTransform())
     val_data_loader = data.DataLoader(val_dataset, batch_size, num_workers=args.num_workers,
                                         shuffle=True, collate_fn=vgg_detection_collate, pin_memory=True)
