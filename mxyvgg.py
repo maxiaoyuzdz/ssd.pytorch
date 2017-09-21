@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector Trai
 parser.add_argument('--version', default='v1', help='still be in edit')
 parser.add_argument('--basenet', default='/media/maxiaoyu/data/pretrainedmodel/vgg16_reducedfc.pth', help='pretrained base model')
 parser.add_argument('--jaccard_threshold', default=0.5, type=float, help='Min Jaccard index for matching')
-parser.add_argument('--batch_size', default=256, type=int, help='Batch size for training')
+parser.add_argument('--batch_size', default=2, type=int, help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str, help='Resume from checkpoint')
 parser.add_argument('--num_workers', default=1, type=int, help='Number of workers used in dataloading')
 parser.add_argument('--iterations', default=120000, type=int, help='Number of training iterations')
@@ -125,7 +125,7 @@ def runTraining():
 
     #batch_iterator = None
     data_loader = data.DataLoader(dataset, batch_size, num_workers=args.num_workers,
-                                  shuffle=False, pin_memory=True)
+                                  shuffle=False, collate_fn=vgg_detection_collate, pin_memory=True)
     batch_count = 0
     # epoch iteration
     for iteration in range(args.start_iter, max_iter):
@@ -143,8 +143,10 @@ def runTraining():
         for i, (images, targets) in enumerate(data_loader):
             batch_count += 1
 
-            print(images.size())
-            print(len(targets))
+            #print(images.size())
+            #images =
+            print(targets)
+            print('----')
             # process image data
 
 

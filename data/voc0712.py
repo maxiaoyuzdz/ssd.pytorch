@@ -23,7 +23,7 @@ else:
 from PIL import Image
 
 from random import randint
-
+import scipy.misc as sm
 
 VOC_CLASSES = (  # always index 0
     'aeroplane', 'bicycle', 'bird', 'boat',
@@ -267,7 +267,7 @@ class VGGDetection(data.Dataset):
             target = self.target_transform(target, width, height)
 
         num_of_items = len(target)
-        print('num_of_items = ', num_of_items)
+        #print('num_of_items = ', num_of_items)
 
 
         """
@@ -297,34 +297,45 @@ class VGGDetection(data.Dataset):
         """
 
         use_item_idx = randint(0, int(num_of_items-1))
-        print('use_item_idx = ', use_item_idx)
+        #print('use_item_idx = ', use_item_idx)
         item = target[use_item_idx]
         pos = item[:4]
         label = item[4]
-        print(pos)
-        print(label)
+        #print(pos)
+        #print(label)
         xmin = item[0]
         ymin = item[1]
         xmax = item[2]
         ymax = item[3]
-        print('--')
-        print(xmin, ymin)
-        print(xmax, ymax)
+        #print('--')
+        #print(xmin, ymin)
+        #print(xmax, ymax)
         pxmin = int(xmin * width)
         pymin = int(ymin * height)
         pxmax = int(xmax * width)
         pymax = int(ymax * height)
-        print('==')
-        print(pxmin, pymin)
-        print(pxmax, pymax)
+        #print('==')
+        #print(pxmin, pymin)
+        #print(pxmax, pymax)
         t_img = img[pymin:pymax, pxmin:pxmax, :]
         #s_img = Image.fromarray(t_img, 'RGB')
         #s_img.show()
 
-        # h w c
-        t_img = torch.from_numpy(t_img)
+        #s_img = Image.fromarray(t_img, 'RGB')
 
-        return t_img, label
+        """
+        image = cv2.resize(t_img, (224, 224))
+        t_img = np.asarray(image, dtype="int32")
+        # h w c
+        t_img = t_img.transpose(2, 0, 1)
+        """
+
+
+        image = cv2.resize(t_img, (224, 224))
+        img = image[:, :, (2, 1, 0)]
+
+        return torch.from_numpy(img).permute(2, 0, 1), label
+        #return t_img, label
 
 
         """
@@ -387,20 +398,22 @@ class VGGDetection(data.Dataset):
 
 
 def vgg_detection_collate(batch):
-    """Custom collate fn for dealing with batches of images that have a different
-    number of associated object annotations (bounding boxes).
-
-    Arguments:
-        batch: (tuple) A tuple of tensor images and lists of annotations
-
-    Return:
-        A tuple containing:
-            1) (tensor) batch of images stacked on their 0 dim
-            2) (list of tensors) annotations for a given image are stacked on 0 dim
-    """
     targets = []
     imgs = []
+    """
     for sample in batch:
         imgs.append(sample[0])
-        targets.append(torch.FloatTensor(sample[1]))
-    return torch.stack(imgs, 0), targets
+        targets.append(sample[1])
+    return np.ndarray(imgs), np.ndarray(targets)
+    """
+    for sample in batch:
+        imgs.append(sample[0])
+        targets.append(sample[1])
+    imgs = torch.stack(imgs, 0)
+    targets = torch.from_numpy(np.array(targets))
+    return imgs, targets
+
+
+
+
+
