@@ -36,8 +36,8 @@ def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector Training')
-parser.add_argument('--version', default='v1', help='still be in edit')
-parser.add_argument('--batch_size', default=64, type=int, help='Batch size for training')
+parser.add_argument('--version', default='v2', help='still be in edit')
+parser.add_argument('--batch_size', default=32, type=int, help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str, help='Resume from checkpoint')
 parser.add_argument('--num_workers', default=8, type=int, help='Number of workers used in dataloading')
 parser.add_argument('--start_iter', default=0, type=int, help='Begin counting iterations starting from this value (should be used with resume)')
@@ -173,8 +173,8 @@ def runTraining():
     print(vgg_net)
     print('================')
 
-    net = torch.nn.DataParallel(vgg_net)
-    net = net.cuda()
+    # net = torch.nn.DataParallel(vgg_net)
+    net = vgg_net.cuda()
 
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=args.momentum, weight_decay=weight_decay)
@@ -226,6 +226,9 @@ def runTraining():
         best_accuracy = max(v_accuracy_avg, best_accuracy)
 
         if iteration % 50 == 0:
+            print('Saving features, iter:', iteration)
+            torch.save(net.features.state_dict(),
+                       '/media/maxiaoyu/data/checkpoint/vgg/vgg16_voc0712_features' + repr(iteration) + '.pth')
             print('Saving state, iter:', iteration)
             torch.save(net.state_dict(),
                        '/media/maxiaoyu/data/checkpoint/vgg/vgg16_voc0712_' + repr(iteration) + '.pth')
