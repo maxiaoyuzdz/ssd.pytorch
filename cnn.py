@@ -33,12 +33,12 @@ class CNNModel(nn.Module):
         self.features = features
         self.classifier = nn.Sequential(
             nn.Dropout(),
-            nn.Linear(25088, 4096),
+            nn.Linear(25088, 1024),
             nn.ReLU(True),
             nn.Dropout(),
-            nn.Linear(4096, 4096),
+            nn.Linear(1024, 1024),
             nn.ReLU(True),
-            nn.Linear(4096, num_classes),
+            nn.Linear(1024, num_classes),
         )
 
         for m in self.modules():
